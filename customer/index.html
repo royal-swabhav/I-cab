@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="../manifest.json">
     <title>I-cab Passenger</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -43,13 +45,13 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="form-group">
-                        <label>Number of Passengers</label>
-                        <input type="number" id="passengerCount" min="1" max="50" value="1" placeholder="Enter passenger count" required>
+                        <label>Passengers</label>
+                        <input type="number" id="passengerCount" min="1" max="50" value="1" required>
                     </div>
                     <div class="form-group">
-                        <label>Required Car Type</label>
+                        <label>Required Car</label>
                         <select id="carType" required>
-                            <option value="Mini">Mini (Hatchback / WagonR)</option>
+                            <option value="Mini">Mini (Hatchback)</option>
                             <option value="Sedan">Sedan (Dzire / Etios)</option>
                             <option value="SUV">SUV (Ertiga / Innova)</option>
                         </select>
@@ -58,33 +60,31 @@
 
                 <div class="form-group">
                     <label>Pickup Location (Point A)</label>
-                    <input type="text" id="pickup" placeholder="Kahan se lena hai?" required>
+                    <input type="text" id="pickup" placeholder="Enter pickup address" required>
                 </div>
                 <div class="form-group">
                     <label>Drop Location (Point B)</label>
-                    <input type="text" id="drop" placeholder="Kahan chhodna hai?" required>
+                    <input type="text" id="drop" placeholder="Enter destination address" required>
                 </div>
                 
                 <div class="form-group">
                     <label>Your Offer Price (₹)</label>
-                    <input type="number" id="fare" placeholder="Kitna kiraya offer karenge?" required>
+                    <input type="number" id="fare" placeholder="Kitna offer karenge?" required>
                 </div>
 
-                <!-- Comment / Note Box -->
                 <div class="form-group">
                     <label>Comments / Special Instructions</label>
-                    <input type="text" id="comment" placeholder="e.g. 2 luggage bags, AC chahiye, pet sath me hai...">
+                    <input type="text" id="comment" placeholder="e.g. 2 luggage bags, AC on...">
                 </div>
 
-                <!-- Toll Not Included Notice -->
                 <div style="background:#fff3cd; border-left: 4px solid #ff9f43; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; color: #856404; font-weight: 600;">
                     ⚠ Toll tax is NOT included in this price (Toll alag se dena hoga)
                 </div>
 
-                <button type="submit" class="btn">Find Driver</button>
+                <button type="submit" class="btn">Find Drivers</button>
             </form>
 
-            <h3 style="margin-top: 25px;">My Active Rides & Driver Offers</h3>
+            <h3 style="margin-top: 25px;">My Active Rides & Live Driver Bids</h3>
             <div id="customerRides">No active requests.</div>
         </div>
     </div>
@@ -94,9 +94,11 @@
             auth, provider, signInWithPopup, signOut, onAuthStateChanged,
             db, collection, addDoc, doc, setDoc, getDoc, onSnapshot, runTransaction, serverTimestamp 
         } from "../firebase-config.js";
+        import { playNotificationSound } from "../sound.js";
 
         let currentUser = null;
         let minFare = 50;
+        let previousBidsCount = {};
 
         const now = new Date();
         document.getElementById('rideDate').value = now.toISOString().split('T')[0];
@@ -140,14 +142,9 @@
             e.preventDefault();
             const fare = Number(document.getElementById('fare').value);
             const phone = document.getElementById('custPhone').value.trim();
-            const passengerCount = Number(document.getElementById('passengerCount').value);
 
             if (fare < minFare) {
                 alert(`Offer price cannot be less than ₹${minFare}`);
-                return;
-            }
-            if (passengerCount < 1) {
-                alert("Kam se kam 1 passenger select karein!");
                 return;
             }
 
@@ -165,16 +162,13 @@
                 drop: document.getElementById('drop').value,
                 rideDate: document.getElementById('rideDate').value,
                 rideTime: document.getElementById('rideTime').value,
-                passengerCount: passengerCount,
+                passengerCount: Number(document.getElementById('passengerCount').value),
                 carType: document.getElementById('carType').value,
                 comment: document.getElementById('comment').value.trim(),
                 fare: fare,
-                status: "pending",
-                driverId: "",
-                driverName: "",
-                driverPhone: "",
-                driverVehicle: "",
-                driverOfferFare: 0,
+                status: "pending", // pending -> confirmed -> completed
+                driverBids: [], // Array of multiple drivers bidding
+                confirmedDriver: null,
                 tollIncluded: false,
                 createdAt: serverTimestamp()
             });
@@ -192,45 +186,62 @@
                     const id = snap.id;
 
                     if (ride.customerId === userId) {
+                        const bids = ride.driverBids || [];
+
+                        // Audio Tone on new bid incoming
+                        if (previousBidsCount[id] !== undefined && bids.length > previousBidsCount[id]) {
+                            playNotificationSound();
+                        }
+                        previousBidsCount[id] = bids.length;
+
                         const card = document.createElement('div');
                         card.className = "card";
-                        
+
                         let actionHTML = '';
 
                         if (ride.status === 'pending') {
-                            actionHTML = `<p style="color:#747d8c; font-size:13px; margin-top:8px;">Finding nearby drivers...</p>`;
-                        } else if (ride.status === 'driver_offered') {
-                            actionHTML = `
-                                <div style="background:#fff8e7; border:1px solid #fed330; padding:12px; border-radius:8px; margin-top:10px;">
-                                    <h4 style="color:#d35400;">Driver Proposal Received!</h4>
-                                    <p style="margin-top:4px;"><strong>Driver:</strong> ${ride.driverName}</p>
-                                    <p><strong>Vehicle:</strong> ${ride.driverVehicle}</p>
-                                    <p style="font-size:16px; margin: 6px 0;"><strong>Demand Fare:</strong> <span class="price">₹${ride.driverOfferFare}</span></p>
-                                    <button class="btn" onclick="confirmDriverBooking('${id}')">Confirm Driver & Reveal Numbers</button>
-                                </div>
-                            `;
+                            if (bids.length === 0) {
+                                actionHTML = `<p style="color:#747d8c; font-size:13px; margin-top:8px;">Finding nearby drivers...</p>`;
+                            } else {
+                                actionHTML = `<div style="margin-top:10px;"><h4 style="color:#2f3542; margin-bottom:8px;">Offers from Drivers (${bids.length}):</h4>`;
+                                bids.forEach((bid, idx) => {
+                                    actionHTML += `
+                                        <div style="background:#f8f9fa; border:1px solid #ced6e0; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                                            <div>
+                                                <strong>${bid.driverName}</strong> <small style="color:#7f8c8d;">(${bid.driverVehicle})</small>
+                                                <div style="color:#2ed573; font-weight:bold; font-size:16px;">₹${bid.offeredFare}</div>
+                                            </div>
+                                            <button class="btn" style="width:auto; padding:6px 14px;" onclick="chooseDriver('${id}', ${idx})">Accept</button>
+                                        </div>
+                                    `;
+                                });
+                                actionHTML += `</div>`;
+                            }
                         } else if (ride.status === 'confirmed') {
+                            const d = ride.confirmedDriver;
+                            const waUrl = `https://wa.me/91${d.driverPhone.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(d.driverName)},%20I%20am%20your%20I-cab%20passenger.`;
                             actionHTML = `
                                 <div style="background:#e8f8f5; border:1px solid #2ecc71; padding:12px; border-radius:8px; margin-top:10px;">
                                     <h4 style="color:#27ae60;">Ride Confirmed!</h4>
-                                    <p><strong>Driver:</strong> ${ride.driverName} (${ride.driverVehicle})</p>
-                                    <p style="font-size:16px; margin-top:4px;">
-                                        <strong>Driver Phone:</strong> <a href="tel:${ride.driverPhone}" style="color:#0984e3; font-weight:bold;">📞 ${ride.driverPhone}</a>
-                                    </p>
+                                    <p><strong>Driver:</strong> ${d.driverName} (${d.driverVehicle})</p>
+                                    <div style="display:flex; gap:10px; margin-top:10px;">
+                                        <a href="tel:${d.driverPhone}" class="btn" style="background:#0984e3; text-decoration:none;">📞 Call</a>
+                                        <a href="${waUrl}" target="_blank" class="btn" style="background:#25D366; text-decoration:none;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                                    </div>
                                 </div>
                             `;
                         } else if (ride.status === 'completed') {
-                            actionHTML = `<p style="color:#27ae60; font-weight:bold; margin-top:8px;">Trip Completed Successfully</p>`;
+                            actionHTML = `<p style="color:#27ae60; font-weight:bold; margin-top:8px;">Trip Completed</p>`;
                         }
 
                         card.innerHTML = `
                             <div class="card-row">
                                 <strong>${ride.pickup} ➔ ${ride.drop}</strong>
-                                <span class="price">₹${ride.status === 'confirmed' ? ride.fare : ride.fare}</span>
+                                <span class="price">₹${ride.confirmedDriver ? ride.confirmedDriver.finalFare : ride.fare}</span>
                             </div>
                             <p style="font-size:13px; color:#57606f;">
                                 📅 <strong>Date:</strong> ${ride.rideDate} | ⏰ <strong>Time:</strong> ${ride.rideTime} <br>
-                                👥 <strong>Passengers:</strong> ${ride.passengerCount} | 🚗 <strong>Car:</strong> ${ride.carType || 'Any'}
+                                👥 <strong>Passengers:</strong> ${ride.passengerCount} | 🚗 <strong>Car:</strong> ${ride.carType}
                             </p>
                             ${ride.comment ? `<p style="font-size:13px; background:#f1f2f6; padding:6px 10px; border-radius:6px; margin:6px 0;">💬 <em>"${ride.comment}"</em></p>` : ''}
                             <p style="font-size:12px; color:#d63031; font-weight:600;">⚠ Toll tax NOT included</p>
@@ -243,7 +254,7 @@
             });
         }
 
-        window.confirmDriverBooking = async (rideId) => {
+        window.chooseDriver = async (rideId, bidIndex) => {
             const rideRef = doc(db, "rides", rideId);
             const settingsSnap = await getDoc(doc(db, "settings", "global"));
             const deductionFee = settingsSnap.exists() ? (settingsSnap.data().driverFeePerOrder || 10) : 10;
@@ -253,26 +264,35 @@
                     const rDoc = await t.get(rideRef);
                     if (!rDoc.exists()) throw "Ride record not found!";
                     const ride = rDoc.data();
+                    const chosenBid = ride.driverBids[bidIndex];
 
-                    const driverRef = doc(db, "drivers", ride.driverId);
+                    const driverRef = doc(db, "drivers", chosenBid.driverId);
                     const dDoc = await t.get(driverRef);
                     if (!dDoc.exists()) throw "Driver not found!";
 
                     const currentPoints = dDoc.data().points || 0;
                     if (currentPoints < deductionFee) {
-                        throw "Driver ke paas balance points nahi hain.";
+                        throw "Driver has insufficient points to confirm this ride.";
                     }
 
+                    // 1. Cut Points from the chosen driver
                     t.update(driverRef, { points: currentPoints - deductionFee });
 
+                    // 2. Lock chosen driver & unlock contacts
                     t.update(rideRef, {
                         status: "confirmed",
-                        fare: ride.driverOfferFare,
+                        confirmedDriver: {
+                            driverId: chosenBid.driverId,
+                            driverName: chosenBid.driverName,
+                            driverPhone: chosenBid.driverPhone,
+                            driverVehicle: chosenBid.driverVehicle,
+                            finalFare: chosenBid.offeredFare
+                        },
                         pointsDeducted: deductionFee
                     });
                 });
 
-                alert("Driver Confirmed! Dono ko mobile numbers reveal ho gaye hain.");
+                alert("Driver Confirmed! Contacts are unlocked.");
             } catch (err) {
                 alert("Error: " + err);
             }
