@@ -7,14 +7,12 @@
     <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-    <!-- Auth Gate -->
     <div id="loginScreen" class="container" style="text-align: center; margin-top: 80px;">
         <h2><span class="brand">I-cab</span> Super Admin</h2>
-        <p style="color: #747d8c; margin: 10px 0 20px;">Restricted to owner account</p>
+        <p style="color: #747d8c; margin: 10px 0 20px;">Restricted to codingschool.0101@gmail.com</p>
         <button id="loginBtn" class="btn">Sign In with Google</button>
     </div>
 
-    <!-- Admin Panel -->
     <div id="adminDashboard" class="container admin-container" style="display: none;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2><span class="brand">I-cab</span> Control Panel</h2>
@@ -51,29 +49,30 @@
             <tbody id="pendingDriversBody"></tbody>
         </table>
 
-        <!-- Approved Drivers & Wallets -->
-        <h3 style="margin-top: 25px;">Approved Drivers & Balances</h3>
+        <!-- Approved Drivers & Points Editing -->
+        <h3 style="margin-top: 25px;">Approved Drivers & Edit Points</h3>
         <table>
             <thead>
                 <tr>
                     <th>Driver Name</th>
                     <th>Phone</th>
                     <th>Vehicle</th>
-                    <th>Wallet Balance</th>
-                    <th>Quick Top-Up</th>
+                    <th>Current Points</th>
+                    <th>Edit / Set Points</th>
                 </tr>
             </thead>
             <tbody id="approvedDriversBody"></tbody>
         </table>
 
-        <!-- Live Rides Monitoring -->
+        <!-- Live Rides Activity -->
         <h3 style="margin-top: 25px;">Live Rides Activity</h3>
         <table>
             <thead>
                 <tr>
                     <th>Passenger</th>
+                    <th>Date & Time</th>
                     <th>Route</th>
-                    <th>Fare</th>
+                    <th>Final Fare</th>
                     <th>Driver</th>
                     <th>Points Cut</th>
                     <th>Status</th>
@@ -163,10 +162,12 @@
                             <td><strong>${d.name}</strong></td>
                             <td>📞 ${d.phone}</td>
                             <td>${d.vehicle}</td>
-                            <td style="color:${d.points < 20 ? 'red' : 'green'}; font-weight:bold;">${d.points || 0} Pts</td>
+                            <td style="color:${d.points < 20 ? 'red' : 'green'}; font-weight:bold; font-size:15px;">${d.points || 0} Pts</td>
                             <td>
-                                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addPoints('${id}', 50)">+50 Pts</button>
-                                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addPoints('${id}', 100)">+100 Pts</button>
+                                <div style="display:flex; gap:6px;">
+                                    <input type="number" id="pts_${id}" value="${d.points || 0}" style="width:80px; padding:4px 6px; font-size:12px;">
+                                    <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; width:auto;" onclick="updateDriverPoints('${id}')">Update</button>
+                                </div>
                             </td>
                         `;
                         approvedTbody.appendChild(tr);
@@ -198,14 +199,19 @@
             }
         };
 
-        window.addPoints = async (driverId, amount) => {
+        // Admin Direct Point Edit Function
+        window.updateDriverPoints = async (driverId) => {
+            const newPoints = Number(document.getElementById(`pts_${driverId}`).value);
+            if (isNaN(newPoints) || newPoints < 0) {
+                alert("Please enter a valid positive point amount.");
+                return;
+            }
+
             const driverRef = doc(db, "drivers", driverId);
             await runTransaction(db, async (t) => {
-                const snap = await t.get(driverRef);
-                const current = snap.data().points || 0;
-                t.update(driverRef, { points: current + amount });
+                t.update(driverRef, { points: newPoints });
             });
-            alert(`Added ${amount} points to driver wallet!`);
+            alert(`Points successfully updated to ${newPoints}!`);
         };
 
         function listenToRides() {
@@ -217,9 +223,10 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${r.customerName} <br><small>📞 ${r.customerPhone}</small></td>
+                        <td>${r.rideDate || '-'} <br><small>${r.rideTime || ''}</small></td>
                         <td>${r.pickup} ➔ ${r.drop}</td>
                         <td>₹${r.fare}</td>
-                        <td>${r.driverName || 'Unassigned'} <br><small>${r.driverPhone ? '📞 ' + r.driverPhone : ''}</small></td>
+                        <td>${r.driverName || 'None'} <br><small>${r.driverPhone ? '📞 ' + r.driverPhone : ''}</small></td>
                         <td style="color:#e67e22; font-weight:bold;">-${r.pointsDeducted || 0} Pts</td>
                         <td><span class="badge badge-${r.status}">${r.status}</span></td>
                     `;
