@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I-cab - Super Admin</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- Auth Gate -->
+    <div id="loginScreen" class="container" style="text-align: center; margin-top: 80px;">
+        <h2><span class="brand">I-cab</span> Super Admin</h2>
+        <p style="color: #747d8c; margin: 10px 0 20px;">Restricted to owner account</p>
+        <button id="loginBtn" class="btn">Sign In with Google</button>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminDashboard" class="container admin-container" style="display: none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2><span class="brand">I-cab</span> Control Panel</h2>
+            <button id="logoutBtn" class="btn btn-danger" style="width:auto; padding:6px 14px;">Logout</button>
+        </div>
+
+        <!-- Base Pricing & Deduction Setup -->
+        <div class="card" style="background:#eefbf3;">
+            <h3>Platform Rules & Rates</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: flex-end;">
+                <div>
+                    <label>Passenger Min Offer (₹)</label>
+                    <input type="number" id="minFareInput">
+                </div>
+                <div>
+                    <label>Driver Deduction Per Trip (Points)</label>
+                    <input type="number" id="driverFeeInput">
+                </div>
+                <button id="saveSettingsBtn" class="btn" style="height: 42px;">Save Rates</button>
+            </div>
+        </div>
+
+        <!-- Driver Approvals -->
+        <h3 style="margin-top: 25px; color:#d63031;">Pending Driver Approvals</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email / Phone</th>
+                    <th>Vehicle</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="pendingDriversBody"></tbody>
+        </table>
+
+        <!-- Approved Drivers & Wallets -->
+        <h3 style="margin-top: 25px;">Approved Drivers & Balances</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Driver Name</th>
+                    <th>Phone</th>
+                    <th>Vehicle</th>
+                    <th>Wallet Balance</th>
+                    <th>Quick Top-Up</th>
+                </tr>
+            </thead>
+            <tbody id="approvedDriversBody"></tbody>
+        </table>
+
+        <!-- Live Rides Monitoring -->
+        <h3 style="margin-top: 25px;">Live Rides Activity</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Passenger</th>
+                    <th>Route</th>
+                    <th>Fare</th>
+                    <th>Driver</th>
+                    <th>Points Cut</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        import { 
+            auth, provider, signInWithPopup, signOut, onAuthStateChanged, ADMIN_EMAIL,
+            db, doc, setDoc, getDoc, collection, onSnapshot, runTransaction 
+        } from "../firebase-config.js";
+
+        const loginScreen = document.getElementById('loginScreen');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const minFareInput = document.getElementById('minFareInput');
+        const driverFeeInput = document.getElementById('driverFeeInput');
+
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            signInWithPopup(auth, provider).catch(err => alert(err.message));
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                loginScreen.style.display = "none";
+                adminDashboard.style.display = "block";
+                loadSettings();
+                listenToDrivers();
+                listenToRides();
+            } else if (user) {
+                alert("Access Denied: Sirf registered admin email hi access kar sakta hai.");
+                signOut(auth);
+            } else {
+                loginScreen.style.display = "block";
+                adminDashboard.style.display = "none";
+            }
+        });
+
+        async function loadSettings() {
+            const snap = await getDoc(doc(db, "settings", "global"));
+            if (snap.exists()) {
+                minFareInput.value = snap.data().minFare || 50;
+                driverFeeInput.value = snap.data().driverFeePerOrder || 10;
+            }
+        }
+
+        document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+            await setDoc(doc(db, "settings", "global"), {
+                minFare: Number(minFareInput.value),
+                driverFeePerOrder: Number(driverFeeInput.value)
+            }, { merge: true });
+            alert("Settings updated!");
+        });
+
+        function listenToDrivers() {
+            onSnapshot(collection(db, "drivers"), (snapshot) => {
+                const pendingTbody = document.getElementById('pendingDriversBody');
+                const approvedTbody = document.getElementById('approvedDriversBody');
+                pendingTbody.innerHTML = "";
+                approvedTbody.innerHTML = "";
+                let pendingCount = 0;
+
+                snapshot.forEach(snap => {
+                    const d = snap.data();
+                    const id = snap.id;
+
+                    if (d.status === "pending") {
+                        pendingCount++;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${d.name}</strong></td>
+                            <td>${d.email}<br><small>📞 ${d.phone}</small></td>
+                            <td>${d.vehicle}</td>
+                            <td>
+                                <button class="btn" style="padding:5px 8px; font-size:11px;" onclick="approveDriver('${id}', 100)">Approve + 100 Pts</button>
+                                <button class="btn btn-danger" style="padding:5px 8px; font-size:11px; margin-top:2px;" onclick="rejectDriver('${id}')">Reject</button>
+                            </td>
+                        `;
+                        pendingTbody.appendChild(tr);
+                    } else if (d.status === "approved") {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${d.name}</strong></td>
+                            <td>📞 ${d.phone}</td>
+                            <td>${d.vehicle}</td>
+                            <td style="color:${d.points < 20 ? 'red' : 'green'}; font-weight:bold;">${d.points || 0} Pts</td>
+                            <td>
+                                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addPoints('${id}', 50)">+50 Pts</button>
+                                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="addPoints('${id}', 100)">+100 Pts</button>
+                            </td>
+                        `;
+                        approvedTbody.appendChild(tr);
+                    }
+                });
+
+                if (pendingCount === 0) {
+                    pendingTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#747d8c;">No pending driver verifications.</td></tr>`;
+                }
+            });
+        }
+
+        window.approveDriver = async (driverId, points) => {
+            const driverRef = doc(db, "drivers", driverId);
+            await runTransaction(db, async (t) => {
+                t.update(driverRef, {
+                    status: "approved",
+                    points: points
+                });
+            });
+            alert("Driver approved with 100 welcome points!");
+        };
+
+        window.rejectDriver = async (driverId) => {
+            if (confirm("Reject this driver?")) {
+                await runTransaction(db, async (t) => {
+                    t.update(doc(db, "drivers", driverId), { status: "rejected" });
+                });
+            }
+        };
+
+        window.addPoints = async (driverId, amount) => {
+            const driverRef = doc(db, "drivers", driverId);
+            await runTransaction(db, async (t) => {
+                const snap = await t.get(driverRef);
+                const current = snap.data().points || 0;
+                t.update(driverRef, { points: current + amount });
+            });
+            alert(`Added ${amount} points to driver wallet!`);
+        };
+
+        function listenToRides() {
+            onSnapshot(collection(db, "rides"), (snapshot) => {
+                const tbody = document.getElementById('adminTableBody');
+                tbody.innerHTML = "";
+                snapshot.forEach((snap) => {
+                    const r = snap.data();
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${r.customerName} <br><small>📞 ${r.customerPhone}</small></td>
+                        <td>${r.pickup} ➔ ${r.drop}</td>
+                        <td>₹${r.fare}</td>
+                        <td>${r.driverName || 'Unassigned'} <br><small>${r.driverPhone ? '📞 ' + r.driverPhone : ''}</small></td>
+                        <td style="color:#e67e22; font-weight:bold;">-${r.pointsDeducted || 0} Pts</td>
+                        <td><span class="badge badge-${r.status}">${r.status}</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
