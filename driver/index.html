@@ -2,65 +2,437 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I-cab - Driver Partner</title>
-    <link rel="stylesheet" href="../style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>I-cab Driver Partner</title>
+    <!-- Google Fonts & Material Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            min-height: 100vh;
+            padding-bottom: 75px;
+        }
+
+        /* Top Header */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #121212;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .top-nav .menu-btn {
+            font-size: 20px;
+            color: #fff;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .top-nav .nav-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Search / Route Filter Bar */
+        .filter-section {
+            padding: 10px 20px 15px;
+            border-bottom: 1px solid #222;
+        }
+        .route-input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .dot-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 14px;
+        }
+        .dot-a { background: #2f80ed; color: #fff; }
+        .dot-b { background: #333; color: #aaa; border: 1px solid #555; }
+
+        .route-text {
+            font-size: 16px;
+            font-weight: 500;
+            flex: 1;
+        }
+        .add-btn {
+            color: #2f80ed;
+            font-size: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .date-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            color: #ddd;
+            font-size: 15px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #eee;
+        }
+        .toggle-switch {
+            width: 48px;
+            height: 26px;
+            background: #a3e635; /* inDrive Neon Green */
+            border-radius: 20px;
+            position: relative;
+            cursor: pointer;
+        }
+        .toggle-thumb {
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+        }
+
+        /* Orders / Points Bar */
+        .orders-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #181818;
+            border-bottom: 1px solid #262626;
+        }
+        .orders-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .badge-timer {
+            background: #a3e635;
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        /* Ride Cards List */
+        .feed-container {
+            padding: 16px;
+        }
+
+        .ride-card {
+            background: #1f1f1f;
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid #2a2a2a;
+            position: relative;
+        }
+
+        .card-fare-row {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .passenger-count {
+            font-size: 15px;
+            font-weight: 400;
+            color: #ccc;
+        }
+
+        /* Badges */
+        .tags-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tag {
+            background: #2b2b2b;
+            color: #ccc;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+        .tag-highlight {
+            background: #403010;
+            color: #f5a623;
+        }
+
+        .ride-schedule {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        /* Route Display */
+        .card-route {
+            margin-bottom: 14px;
+        }
+        .route-stop {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .dot-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .route-text-sub {
+            font-size: 14px;
+            color: #e0e0e0;
+            line-height: 1.3;
+        }
+
+        .published-time {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #282828;
+            padding-bottom: 10px;
+        }
+
+        /* Customer User Snippet */
+        .user-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .avatar-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-size: 18px;
+        }
+        .user-details h5 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .user-details span {
+            font-size: 12px;
+            color: #aaa;
+        }
+        .rating-star {
+            color: #f5a623;
+            margin-right: 3px;
+        }
+
+        /* Action Buttons */
+        .btn-action-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .btn-indrive-green {
+            flex: 1;
+            padding: 12px;
+            background: #a3e635;
+            color: #000;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-dark-counter {
+            flex: 1;
+            padding: 12px;
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #444;
+            font-weight: 600;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* Bottom Tab Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #181818;
+            border-top: 1px solid #282828;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+        }
+        .tab-item {
+            text-align: center;
+            color: #888;
+            font-size: 11px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .tab-item i {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .tab-item.active {
+            color: #ffffff;
+        }
+
+        /* Auth & Profile Overlays */
+        .auth-card {
+            background: #1e1e1e;
+            padding: 30px 20px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 40px 16px;
+        }
+        input, select {
+            width: 100%;
+            padding: 13px;
+            background: #282828;
+            border: 1px solid #3a3a3a;
+            color: #fff;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        input::placeholder { color: #777; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Auth Screen -->
-        <div id="driverAuthBox" style="text-align: center; padding: 25px 0;">
-            <h2><span class="brand">I-cab</span> Partner</h2>
-            <p style="color: #747d8c; margin: 10px 0 20px;">Sign in with Google to accept passenger bookings</p>
-            <button id="driverLoginBtn" class="btn btn-secondary">Sign In with Google</button>
-        </div>
 
-        <!-- Driver Portal -->
-        <div id="driverAppSection" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div>
-                    <h3 id="driverNameHeader">Driver Portal</h3>
-                    <span id="driverStatusBadge" class="badge">Checking...</span>
-                </div>
-                <div style="text-align: right;">
-                    <span style="font-size: 12px; color: #747d8c;">Wallet Balance</span>
-                    <div id="driverPointsDisplay" style="font-size: 20px; font-weight: bold; color: #2ed573;">0 Pts</div>
-                    <button id="driverLogoutBtn" class="btn btn-secondary" style="width:auto; padding:3px 8px; font-size:11px; margin-top:3px;">Logout</button>
-                </div>
-            </div>
-
-            <!-- Profile Registration Form (New Drivers) -->
-            <div id="driverSetupBox" class="card" style="display:none; background:#fffbf0;">
-                <h4>Complete Registration</h4>
-                <p style="font-size:12px; color:#666; margin-bottom:10px;">Submit details for Admin Approval.</p>
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="tel" id="regPhone" placeholder="10-digit number" required>
-                </div>
-                <div class="form-group">
-                    <label>Vehicle Model & Number Plate</label>
-                    <input type="text" id="regVehicle" placeholder="e.g. Swift Dzire (DL-01-AB-1234)" required>
-                </div>
-                <button id="submitApplicationBtn" class="btn">Send for Admin Approval</button>
-            </div>
-
-            <!-- Pending Review Notice -->
-            <div id="pendingNotice" class="card" style="display:none; background:#fff3cd; color:#856404;">
-                <h4>Verification Under Review</h4>
-                <p style="font-size: 13px; margin-top: 4px;">Aapki profile admin review ke liye submit ho chuki hai. Admin approve karega aur points grant karega tab aap trip accept kar sakenge.</p>
-            </div>
-
-            <!-- Rides Section (Approved Only) -->
-            <div id="ridesSection" style="display:none;">
-                <div id="chargeNotice" style="font-size: 12px; color: #e67e22; margin-bottom: 12px; font-weight: bold;">
-                    Deduction per ride: Loading...
-                </div>
-                <h3>Available Passenger Requests</h3>
-                <div id="driverRidesList">Looking for nearby passengers...</div>
-            </div>
-        </div>
+    <!-- 1. Google Sign-In Screen (If not logged in) -->
+    <div id="driverAuthBox" class="auth-card">
+        <h2 style="margin-bottom: 6px;"><span style="color:#a3e635;">I-cab</span> Partner</h2>
+        <p style="color:#888; font-size:14px; margin-bottom:20px;">City to City & Local Driver Access</p>
+        <button id="driverLoginBtn" class="btn-indrive-green" style="padding:14px;">Sign In with Google</button>
     </div>
 
+    <!-- 2. Main InDrive App (Post Login) -->
+    <div id="driverAppSection" style="display: none;">
+        
+        <!-- Header -->
+        <div class="top-nav">
+            <button class="menu-btn" id="driverLogoutBtn"><i class="fa-solid fa-bars"></i></button>
+            <div class="nav-title">City to City</div>
+            <div style="width: 20px;"></div>
+        </div>
+
+        <!-- Filter Area -->
+        <div class="filter-section">
+            <div class="route-input-group">
+                <div class="dot-icon dot-a">A</div>
+                <div class="route-text" id="filterCityA">Pune</div>
+                <button class="add-btn"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <div class="route-input-group">
+                <div class="dot-icon dot-b">B</div>
+                <div class="route-text" style="color:#888;">To anywhere</div>
+            </div>
+            <div class="date-row">
+                <div><i class="fa-regular fa-calendar-days" style="margin-right:8px;"></i> <span id="displayDateText">Today</span></div>
+                <i class="fa-solid fa-circle-xmark" style="color:#666;"></i>
+            </div>
+            <div class="toggle-row">
+                <span>Notify me about new requests <i class="fa-regular fa-circle-question" style="color:#2f80ed;"></i></span>
+                <div class="toggle-switch"><div class="toggle-thumb"></div></div>
+            </div>
+        </div>
+
+        <!-- Wallet / Orders Status Bar -->
+        <div class="orders-bar">
+            <div class="orders-count">
+                <i class="fa-solid fa-car-side" style="color:#a3e635;"></i>
+                <span id="ordersRemainingText">Loading balance...</span>
+            </div>
+            <div class="badge-timer" id="driverPointsHeader">0 Pts</div>
+        </div>
+
+        <!-- Driver Application Registration (If New) -->
+        <div id="driverSetupBox" style="display:none; padding:16px;">
+            <div class="ride-card">
+                <h4 style="margin-bottom:10px; color:#a3e635;">Driver Registration</h4>
+                <p style="font-size:13px; color:#aaa; margin-bottom:14px;">Vehicle details enter karein taaki admin verify kar sake.</p>
+                <input type="tel" id="regPhone" placeholder="Mobile Number (10 Digits)">
+                <input type="text" id="regVehicle" placeholder="Car Model & Plate No (e.g. Swift Dzire MH-12-AB-1234)">
+                <button id="submitApplicationBtn" class="btn-indrive-green">Submit For Approval</button>
+            </div>
+        </div>
+
+        <!-- Pending Approval Notice -->
+        <div id="pendingNotice" style="display:none; padding:16px;">
+            <div class="ride-card" style="border-color:#f5a623; text-align:center;">
+                <i class="fa-solid fa-clock-rotate-left" style="font-size:30px; color:#f5a623; margin-bottom:10px;"></i>
+                <h4 style="margin-bottom:6px;">Verification Under Review</h4>
+                <p style="font-size:13px; color:#aaa;">Aapka account admin verification me hai. Approve hone ke baad rides live ho jayengi.</p>
+            </div>
+        </div>
+
+        <!-- Feed List -->
+        <div id="ridesSection" style="display:none;">
+            <div class="feed-container" id="driverRidesList">
+                <p style="text-align:center; color:#666; margin-top:20px;">Scanning for requests...</p>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="tab-item active">
+                <i class="fa-solid fa-list-ul"></i>
+                Ride requests
+            </div>
+            <div class="tab-item" onclick="alert('Viewing accepted orders in list below!')">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                My orders
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDK Modules -->
     <script type="module">
         import { 
             auth, provider, signInWithPopup, signOut, onAuthStateChanged,
@@ -75,14 +447,15 @@
             signInWithPopup(auth, provider).catch(err => alert(err.message));
         });
 
-        document.getElementById('driverLogoutBtn').addEventListener('click', () => signOut(auth));
+        document.getElementById('driverLogoutBtn').addEventListener('click', () => {
+            if(confirm("Logout from Driver Partner?")) signOut(auth);
+        });
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUid = user.uid;
                 document.getElementById('driverAuthBox').style.display = "none";
                 document.getElementById('driverAppSection').style.display = "block";
-                document.getElementById('driverNameHeader').innerText = user.displayName;
                 listenToProfile(user);
             } else {
                 currentUid = null;
@@ -91,53 +464,52 @@
             }
         });
 
+        // Track global rate settings
         onSnapshot(doc(db, "settings", "global"), (snap) => {
             if (snap.exists()) {
                 deductionFee = snap.data().driverFeePerOrder || 10;
-                document.getElementById('chargeNotice').innerText = `Points cut per accepted ride: ${deductionFee} Pts`;
+                updateOrdersRemainingText();
             }
         });
+
+        function updateOrdersRemainingText() {
+            if (!driverData) return;
+            const pts = driverData.points || 0;
+            const ordersPossible = Math.floor(pts / deductionFee);
+            document.getElementById('ordersRemainingText').innerText = `${ordersPossible} orders left`;
+            document.getElementById('driverPointsHeader').innerText = `${pts} Pts`;
+        }
 
         function listenToProfile(user) {
             onSnapshot(doc(db, "drivers", user.uid), (docSnap) => {
                 const setupBox = document.getElementById('driverSetupBox');
                 const pendingNotice = document.getElementById('pendingNotice');
                 const ridesSection = document.getElementById('ridesSection');
-                const statusBadge = document.getElementById('driverStatusBadge');
-                const pointsDisplay = document.getElementById('driverPointsDisplay');
 
                 if (!docSnap.exists()) {
                     setupBox.style.display = "block";
                     pendingNotice.style.display = "none";
                     ridesSection.style.display = "none";
-                    statusBadge.innerText = "Unregistered";
-                    statusBadge.className = "badge badge-pending";
                     return;
                 }
 
                 driverData = docSnap.data();
-                pointsDisplay.innerText = `${driverData.points || 0} Pts`;
+                updateOrdersRemainingText();
 
                 if (driverData.status === "approved") {
                     setupBox.style.display = "none";
                     pendingNotice.style.display = "none";
                     ridesSection.style.display = "block";
-                    statusBadge.innerText = "Approved";
-                    statusBadge.className = "badge badge-accepted";
-                    listenToRides();
+                    listenToRidesFeed();
                 } else if (driverData.status === "rejected") {
                     setupBox.style.display = "none";
                     pendingNotice.style.display = "block";
-                    pendingNotice.innerHTML = `<h4>Application Rejected</h4><p>Admin has rejected your registration.</p>`;
+                    pendingNotice.innerHTML = `<div class="ride-card" style="border-color:#ff4757; text-align:center;"><h4 style="color:#ff4757;">Rejected</h4><p style="color:#aaa; font-size:13px;">Admin has rejected your registration.</p></div>`;
                     ridesSection.style.display = "none";
-                    statusBadge.innerText = "Rejected";
-                    statusBadge.className = "badge btn-danger";
                 } else {
                     setupBox.style.display = "none";
                     pendingNotice.style.display = "block";
                     ridesSection.style.display = "none";
-                    statusBadge.innerText = "Pending Verification";
-                    statusBadge.className = "badge badge-pending";
                 }
             });
         }
@@ -147,7 +519,7 @@
             const vehicle = document.getElementById('regVehicle').value.trim();
 
             if (!phone || !vehicle) {
-                alert("Please fill mobile number and vehicle details!");
+                alert("Please fill mobile number and vehicle plate details!");
                 return;
             }
 
@@ -162,82 +534,151 @@
                 submittedAt: new Date()
             });
 
-            alert("Application submitted! Admin approval pending.");
+            alert("Details submitted! Waiting for Admin verification.");
         });
 
-        function listenToRides() {
+        function listenToRidesFeed() {
             onSnapshot(collection(db, "rides"), (snapshot) => {
                 const list = document.getElementById('driverRidesList');
                 list.innerHTML = "";
+                let count = 0;
 
                 snapshot.forEach((snap) => {
                     const ride = snap.data();
                     const id = snap.id;
-                    const isAcceptedByMe = ride.status === "accepted" && ride.driverId === currentUid;
 
-                    if (ride.status === "pending" || isAcceptedByMe) {
+                    const isConfirmedForMe = ride.status === "confirmed" && ride.driverId === currentUid;
+                    const isMyProposal = ride.status === "driver_offered" && ride.driverId === currentUid;
+
+                    if (ride.status === "pending" || isMyProposal || isConfirmedForMe) {
+                        count++;
                         const card = document.createElement('div');
-                        card.className = "card";
-                        card.innerHTML = `
-                            <div class="card-row">
-                                <strong>Passenger: ${ride.customerName}</strong>
-                                <span class="price">₹${ride.fare}</span>
-                            </div>
-                            <p><strong>Route:</strong> ${ride.pickup} ➔ ${ride.drop}</p>
-                            <p><strong>Status:</strong> <span class="badge badge-${ride.status}">${ride.status}</span></p>
+                        card.className = "ride-card";
 
-                            ${isAcceptedByMe ? `
-                                <div style="background:#e8f4fd; border:1px solid #3498db; padding:10px; border-radius:6px; margin-top:8px;">
-                                    <h4 style="color:#2980b9;">Passenger Number Unlocked</h4>
-                                    <p style="font-size:15px; margin-top:4px;">
-                                        <strong>Call Passenger:</strong> <a href="tel:${ride.customerPhone}" style="color:#27ae60; font-weight:bold;">📞 ${ride.customerPhone}</a>
-                                    </p>
+                        let actionButtons = '';
+
+                        if (ride.status === "pending") {
+                            actionButtons = `
+                                <div class="btn-action-row">
+                                    <button class="btn-indrive-green" onclick="sendProposal('${id}', ${ride.fare})">Accept ₹${ride.fare}</button>
+                                    <button class="btn-dark-counter" onclick="counterOffer('${id}', ${ride.fare})">Offer higher</button>
                                 </div>
-                                <button class="btn btn-danger" style="margin-top:8px;" onclick="completeRide('${id}')">Finish Trip</button>
-                            ` : `
-                                <button class="btn" style="margin-top:10px;" onclick="acceptTrip('${id}')">Accept & Deduct ${deductionFee} Pts</button>
-                            `}
+                            `;
+                        } else if (isMyProposal) {
+                            actionButtons = `
+                                <div style="background:#262215; border:1px solid #73510e; border-radius:10px; padding:12px; margin-top:12px; text-align:center;">
+                                    <span style="color:#f5a623; font-weight:700; font-size:15px;">Your Offer: ₹${ride.driverOfferFare}</span>
+                                    <p style="font-size:12px; color:#aaa; margin-top:4px;">Waiting for passenger confirmation...</p>
+                                </div>
+                            `;
+                        } else if (isConfirmedForMe) {
+                            actionButtons = `
+                                <div style="background:#13281a; border:1px solid #27ae60; border-radius:10px; padding:12px; margin-top:12px;">
+                                    <div style="color:#2ed573; font-weight:700; margin-bottom:4px;">Booking Confirmed!</div>
+                                    <p style="font-size:15px; margin-bottom:10px;">
+                                        <strong>Passenger Phone:</strong> <a href="tel:${ride.customerPhone}" style="color:#a3e635; text-decoration:none; font-weight:bold;">📞 ${ride.customerPhone}</a>
+                                    </p>
+                                    <button class="btn-indrive-green" style="background:#ff4757; color:#fff;" onclick="completeRide('${id}')">Finish Trip</button>
+                                </div>
+                            `;
+                        }
+
+                        card.innerHTML = `
+                            <div class="card-fare-row">
+                                ₹${ride.driverOfferFare && isMyProposal ? ride.driverOfferFare : ride.fare} 
+                                <span class="passenger-count">for ${ride.passengerCount || 1} passenger${(ride.passengerCount || 1) > 1 ? 's' : ''}</span>
+                            </div>
+
+                            <div class="tags-row">
+                                <span class="tag tag-highlight">${ride.rideType || 'Private ride'}</span>
+                                <span class="tag">Cash</span>
+                                <span class="tag" style="color:#a3e635;">Toll included</span>
+                            </div>
+
+                            <div class="ride-schedule">
+                                <i class="fa-regular fa-clock" style="margin-right:4px;"></i> ${ride.rideDate || 'Flexible'}, ${ride.rideTime || ''}
+                            </div>
+
+                            <div class="card-route">
+                                <div class="route-stop">
+                                    <div class="dot-indicator dot-a">A</div>
+                                    <div class="route-text-sub">${ride.pickup}</div>
+                                </div>
+                                <div class="route-stop">
+                                    <div class="dot-indicator dot-b" style="background:#27ae60; color:#fff; border:none;">B</div>
+                                    <div class="route-text-sub">${ride.drop}</div>
+                                </div>
+                            </div>
+
+                            <div class="published-time">Published just now</div>
+
+                            <div class="user-row">
+                                <div class="avatar-circle"><i class="fa-solid fa-user"></i></div>
+                                <div class="user-details">
+                                    <h5>${ride.customerName}</h5>
+                                    <span><i class="fa-solid fa-star rating-star"></i>5.0 • Verified</span>
+                                </div>
+                            </div>
+
+                            ${actionButtons}
                         `;
                         list.appendChild(card);
                     }
                 });
+
+                if (count === 0) {
+                    list.innerHTML = `<p style="text-align:center; color:#666; margin-top:40px;">No rides available in this route right now.</p>`;
+                }
             });
         }
 
-        window.acceptTrip = async (rideId) => {
+        window.sendProposal = async (rideId, fare) => {
             if ((driverData.points || 0) < deductionFee) {
-                alert(`Insufficient Balance! Aapke paas sirf ${driverData.points || 0} points hain. Trip lene ke liye ${deductionFee} points chahiye. Admin se points recharge karwayein.`);
+                alert(`Insufficient Balance! Aapke wallet me minimum ${deductionFee} points hone chahiye.`);
                 return;
             }
 
-            const driverRef = doc(db, "drivers", currentUid);
-            const rideRef = doc(db, "rides", rideId);
+            await runTransaction(db, async (t) => {
+                const rDoc = await t.get(doc(db, "rides", rideId));
+                if (rDoc.data().status !== "pending") throw "Ride no longer available!";
 
-            try {
+                t.update(doc(db, "rides", rideId), {
+                    status: "driver_offered",
+                    driverId: currentUid,
+                    driverName: driverData.name,
+                    driverPhone: driverData.phone,
+                    driverVehicle: driverData.vehicle,
+                    driverOfferFare: fare
+                });
+            });
+
+            alert("Offer sent to passenger!");
+        };
+
+        window.counterOffer = async (rideId, currentFare) => {
+            if ((driverData.points || 0) < deductionFee) {
+                alert(`Insufficient Balance! ${deductionFee} points required.`);
+                return;
+            }
+
+            const counter = prompt(`Passenger offer ₹${currentFare} hai. Apna badhaya hua fare dalein (₹):`, currentFare + 100);
+
+            if (counter && Number(counter) > 0) {
                 await runTransaction(db, async (t) => {
-                    const dSnap = await t.get(driverRef);
-                    const rSnap = await t.get(rideRef);
+                    const rDoc = await t.get(doc(db, "rides", rideId));
+                    if (rDoc.data().status !== "pending") throw "Ride no longer available!";
 
-                    if (rSnap.data().status !== "pending") throw "Trip already accepted by another driver!";
-                    const currentPoints = dSnap.data().points || 0;
-                    if (currentPoints < deductionFee) throw "Insufficient points!";
-
-                    // Wallet cut
-                    t.update(driverRef, { points: currentPoints - deductionFee });
-
-                    // Ride assign
-                    t.update(rideRef, {
-                        status: "accepted",
+                    t.update(doc(db, "rides", rideId), {
+                        status: "driver_offered",
                         driverId: currentUid,
                         driverName: driverData.name,
                         driverPhone: driverData.phone,
-                        pointsDeducted: deductionFee
+                        driverVehicle: driverData.vehicle,
+                        driverOfferFare: Number(counter)
                     });
                 });
 
-                alert("Ride successfully accepted!");
-            } catch (err) {
-                alert("Error: " + err);
+                alert(`Counter offer of ₹${counter} sent!`);
             }
         };
 
@@ -245,7 +686,7 @@
             await runTransaction(db, async (t) => {
                 t.update(doc(db, "rides", rideId), { status: "completed" });
             });
-            alert("Trip finished!");
+            alert("Trip completed successfully!");
         };
     </script>
 </body>
