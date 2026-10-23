@@ -43,38 +43,42 @@
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="form-group">
-                        <label>Passengers</label>
-                        <select id="passengerCount">
-                            <option value="1">1 Passenger</option>
-                            <option value="2" selected>2 Passengers</option>
-                            <option value="3">3 Passengers</option>
-                            <option value="4">4 Passengers</option>
-                        </select>
+                        <label>Number of Passengers</label>
+                        <input type="number" id="passengerCount" min="1" max="50" value="1" placeholder="Enter passenger count" required>
                     </div>
                     <div class="form-group">
-                        <label>Ride Category</label>
-                        <select id="rideType">
-                            <option value="Private ride">Private ride</option>
-                            <option value="Shared / Pool">Shared ride</option>
+                        <label>Required Car Type</label>
+                        <select id="carType" required>
+                            <option value="Mini">Mini (Hatchback / WagonR)</option>
+                            <option value="Sedan">Sedan (Dzire / Etios)</option>
+                            <option value="SUV">SUV (Ertiga / Innova)</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label>Pickup Location (Point A)</label>
-                    <input type="text" id="pickup" placeholder="e.g. Swargate, Pune" required>
+                    <input type="text" id="pickup" placeholder="Kahan se lena hai?" required>
                 </div>
                 <div class="form-group">
                     <label>Drop Location (Point B)</label>
-                    <input type="text" id="drop" placeholder="e.g. Panvel, Navi Mumbai" required>
+                    <input type="text" id="drop" placeholder="Kahan chhodna hai?" required>
                 </div>
+                
                 <div class="form-group">
                     <label>Your Offer Price (₹)</label>
                     <input type="number" id="fare" placeholder="Kitna kiraya offer karenge?" required>
                 </div>
 
-                <div style="background:#eefbf3; border-left: 4px solid #2ed573; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; color: #1e824c; font-weight: 600;">
-                    ✓ Toll tax is already included in this price
+                <!-- Comment / Note Box -->
+                <div class="form-group">
+                    <label>Comments / Special Instructions</label>
+                    <input type="text" id="comment" placeholder="e.g. 2 luggage bags, AC chahiye, pet sath me hai...">
+                </div>
+
+                <!-- Toll Not Included Notice -->
+                <div style="background:#fff3cd; border-left: 4px solid #ff9f43; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; color: #856404; font-weight: 600;">
+                    ⚠ Toll tax is NOT included in this price (Toll alag se dena hoga)
                 </div>
 
                 <button type="submit" class="btn">Find Driver</button>
@@ -136,9 +140,14 @@
             e.preventDefault();
             const fare = Number(document.getElementById('fare').value);
             const phone = document.getElementById('custPhone').value.trim();
+            const passengerCount = Number(document.getElementById('passengerCount').value);
 
             if (fare < minFare) {
                 alert(`Offer price cannot be less than ₹${minFare}`);
+                return;
+            }
+            if (passengerCount < 1) {
+                alert("Kam se kam 1 passenger select karein!");
                 return;
             }
 
@@ -156,8 +165,9 @@
                 drop: document.getElementById('drop').value,
                 rideDate: document.getElementById('rideDate').value,
                 rideTime: document.getElementById('rideTime').value,
-                passengerCount: Number(document.getElementById('passengerCount').value),
-                rideType: document.getElementById('rideType').value,
+                passengerCount: passengerCount,
+                carType: document.getElementById('carType').value,
+                comment: document.getElementById('comment').value.trim(),
                 fare: fare,
                 status: "pending",
                 driverId: "",
@@ -165,7 +175,7 @@
                 driverPhone: "",
                 driverVehicle: "",
                 driverOfferFare: 0,
-                tollIncluded: true,
+                tollIncluded: false,
                 createdAt: serverTimestamp()
             });
 
@@ -188,7 +198,7 @@
                         let actionHTML = '';
 
                         if (ride.status === 'pending') {
-                            actionHTML = `<p style="color:#747d8c; font-size:13px; margin-top:8px;">Drivers ko notify kar diya gaya hai...</p>`;
+                            actionHTML = `<p style="color:#747d8c; font-size:13px; margin-top:8px;">Finding nearby drivers...</p>`;
                         } else if (ride.status === 'driver_offered') {
                             actionHTML = `
                                 <div style="background:#fff8e7; border:1px solid #fed330; padding:12px; border-radius:8px; margin-top:10px;">
@@ -205,7 +215,7 @@
                                     <h4 style="color:#27ae60;">Ride Confirmed!</h4>
                                     <p><strong>Driver:</strong> ${ride.driverName} (${ride.driverVehicle})</p>
                                     <p style="font-size:16px; margin-top:4px;">
-                                        <strong>Call Driver:</strong> <a href="tel:${ride.driverPhone}" style="color:#0984e3; font-weight:bold;">📞 ${ride.driverPhone}</a>
+                                        <strong>Driver Phone:</strong> <a href="tel:${ride.driverPhone}" style="color:#0984e3; font-weight:bold;">📞 ${ride.driverPhone}</a>
                                     </p>
                                 </div>
                             `;
@@ -218,8 +228,12 @@
                                 <strong>${ride.pickup} ➔ ${ride.drop}</strong>
                                 <span class="price">₹${ride.status === 'confirmed' ? ride.fare : ride.fare}</span>
                             </div>
-                            <p style="font-size:13px; color:#57606f;">📅 <strong>Date:</strong> ${ride.rideDate} | ⏰ <strong>Time:</strong> ${ride.rideTime} | 👥 ${ride.passengerCount || 1} Person</p>
-                            <p style="font-size:12px; color:#2ed573; font-weight:600;">✓ Toll tax included</p>
+                            <p style="font-size:13px; color:#57606f;">
+                                📅 <strong>Date:</strong> ${ride.rideDate} | ⏰ <strong>Time:</strong> ${ride.rideTime} <br>
+                                👥 <strong>Passengers:</strong> ${ride.passengerCount} | 🚗 <strong>Car:</strong> ${ride.carType || 'Any'}
+                            </p>
+                            ${ride.comment ? `<p style="font-size:13px; background:#f1f2f6; padding:6px 10px; border-radius:6px; margin:6px 0;">💬 <em>"${ride.comment}"</em></p>` : ''}
+                            <p style="font-size:12px; color:#d63031; font-weight:600;">⚠ Toll tax NOT included</p>
                             <p style="margin-top:4px;">Status: <span class="badge badge-${ride.status}">${ride.status}</span></p>
                             ${actionHTML}
                         `;
@@ -246,7 +260,7 @@
 
                     const currentPoints = dDoc.data().points || 0;
                     if (currentPoints < deductionFee) {
-                        throw "Driver ke paas confirm karne ke points nahi hain.";
+                        throw "Driver ke paas balance points nahi hain.";
                     }
 
                     t.update(driverRef, { points: currentPoints - deductionFee });
@@ -258,7 +272,7 @@
                     });
                 });
 
-                alert("Driver Confirmed! Dono ko contact numbers unlock ho chuke hain.");
+                alert("Driver Confirmed! Dono ko mobile numbers reveal ho gaye hain.");
             } catch (err) {
                 alert("Error: " + err);
             }
