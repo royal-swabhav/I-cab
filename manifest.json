@@ -1,0 +1,15 @@
+{
+  "name": "I-cab Partner & Rides",
+  "short_name": "I-cab",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#a3e635",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3097/3097180.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
