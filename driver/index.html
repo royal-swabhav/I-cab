@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="../manifest.json">
     <title>I-cab Driver Partner</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,12 +24,11 @@
             padding-bottom: 75px;
         }
 
-        /* Top Header */
         .top-nav {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px;
+            padding: 14px 18px;
             background: #181818;
             border-bottom: 1px solid #282828;
             position: sticky;
@@ -36,25 +36,28 @@
             z-index: 100;
         }
         .top-nav .nav-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
         }
-        .logout-btn {
-            background: none;
-            border: 1px solid #444;
-            color: #ff4757;
-            padding: 5px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-        }
 
-        /* Balance & Points Strip */
+        /* Online / Offline Switch */
+        .duty-switch-btn {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .duty-online { background: #a3e635; color: #000; }
+        .duty-offline { background: #444; color: #bbb; }
+
         .wallet-strip {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 20px;
+            padding: 12px 18px;
             background: #1c1c1c;
             border-bottom: 1px solid #2b2b2b;
         }
@@ -67,7 +70,6 @@
             font-weight: 700;
         }
 
-        /* Feed Cards */
         .feed-container {
             padding: 16px;
         }
@@ -107,28 +109,10 @@
             padding: 4px 10px;
             border-radius: 6px;
         }
-        .tag-car {
-            background: #1e3799;
-            color: #ffffff;
-            font-weight: 600;
-        }
-        .tag-toll {
-            background: #3d1c1c;
-            color: #ff6b6b;
-            font-weight: 600;
-        }
+        .tag-car { background: #1e3799; color: #ffffff; font-weight: 600; }
+        .tag-toll { background: #3d1c1c; color: #ff6b6b; font-weight: 600; }
 
-        .ride-schedule {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #dfe4ea;
-        }
-
-        /* Route Stop Indicators */
-        .card-route {
-            margin-bottom: 12px;
-        }
+        .card-route { margin-bottom: 12px; }
         .route-stop {
             display: flex;
             align-items: flex-start;
@@ -150,13 +134,6 @@
         .dot-a { background: #2f80ed; color: #fff; }
         .dot-b { background: #27ae60; color: #fff; }
 
-        .route-text-sub {
-            font-size: 14px;
-            color: #e0e0e0;
-            line-height: 1.4;
-        }
-
-        /* Comment Bubble */
         .comment-box {
             background: #262626;
             border-left: 3px solid #f5a623;
@@ -167,7 +144,6 @@
             margin-bottom: 14px;
         }
 
-        /* User Details */
         .user-row {
             display: flex;
             align-items: center;
@@ -176,8 +152,8 @@
             padding-top: 12px;
         }
         .avatar-circle {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: #333;
             display: flex;
@@ -185,16 +161,7 @@
             justify-content: center;
             color: #888;
         }
-        .user-details h5 {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .user-details span {
-            font-size: 12px;
-            color: #888;
-        }
 
-        /* Action Buttons */
         .btn-action-row {
             display: flex;
             gap: 10px;
@@ -210,6 +177,8 @@
             border-radius: 10px;
             font-size: 14px;
             cursor: pointer;
+            text-align: center;
+            text-decoration: none;
         }
         .btn-dark-counter {
             flex: 1;
@@ -223,7 +192,6 @@
             cursor: pointer;
         }
 
-        /* Bottom Tab Bar */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -249,7 +217,6 @@
             color: #a3e635;
         }
 
-        /* Generic Inputs */
         input, select {
             width: 100%;
             padding: 12px;
@@ -264,84 +231,104 @@
 </head>
 <body>
 
-    <!-- 1. Google Login Screen -->
+    <!-- Auth Box -->
     <div id="driverAuthBox" style="padding: 40px 20px; text-align: center;">
         <h2 style="margin-bottom: 8px;"><span style="color:#a3e635;">I-cab</span> Driver Partner</h2>
-        <p style="color:#888; font-size:14px; margin-bottom:24px;">Sign in with Google to view live passenger bookings</p>
+        <p style="color:#888; font-size:14px; margin-bottom:24px;">Sign in with Google</p>
         <button id="driverLoginBtn" class="btn-indrive-green" style="max-width:320px; padding:14px;">Sign In with Google</button>
     </div>
 
-    <!-- 2. Main Driver App -->
+    <!-- Main Portal -->
     <div id="driverAppSection" style="display: none;">
-        
-        <!-- Header -->
         <div class="top-nav">
             <div class="nav-title">I-cab Partner</div>
-            <button class="logout-btn" id="driverLogoutBtn">Logout</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button id="dutyToggleBtn" class="duty-switch-btn duty-online">ONLINE</button>
+                <button class="duty-switch-btn" style="background:#2a2a2a; color:#fff;" id="driverLogoutBtn">Exit</button>
+            </div>
         </div>
 
-        <!-- Wallet / Points Bar -->
         <div class="wallet-strip">
             <div>
                 <span style="font-size: 12px; color: #888;">Wallet Balance</span>
-                <div style="font-size: 13px; color: #bbb;" id="chargeNotice">Fee per ride: ...</div>
+                <div style="font-size: 13px; color: #bbb;" id="chargeNotice">Fee: ...</div>
             </div>
             <div class="points-box" id="driverPointsHeader">0 Pts</div>
         </div>
 
-        <!-- Driver Profile Setup Form (If New) -->
         <div id="driverSetupBox" style="display:none; padding:16px;">
             <div class="ride-card">
                 <h4 style="margin-bottom:10px; color:#a3e635;">Driver Registration</h4>
-                <p style="font-size:13px; color:#aaa; margin-bottom:14px;">Apna mobile number aur vehicle details submit karein.</p>
                 <input type="tel" id="regPhone" placeholder="Mobile Number (10 Digits)">
                 <input type="text" id="regVehicle" placeholder="Vehicle Model & Number (e.g. Swift Dzire MH-12-AB-1234)">
-                <button id="submitApplicationBtn" class="btn-indrive-green">Submit for Admin Approval</button>
+                <button id="submitApplicationBtn" class="btn-indrive-green">Submit for Verification</button>
             </div>
         </div>
 
-        <!-- Pending Approval Notice -->
         <div id="pendingNotice" style="display:none; padding:16px;">
             <div class="ride-card" style="border-color:#f5a623; text-align:center;">
                 <i class="fa-solid fa-clock-rotate-left" style="font-size:32px; color:#f5a623; margin-bottom:10px;"></i>
                 <h4 style="margin-bottom:6px;">Verification Pending</h4>
-                <p style="font-size:13px; color:#aaa;">Aapka account admin review me hai. Admin approval milne ke baad aap ride requests dekh sakenge.</p>
+                <p style="font-size:13px; color:#aaa;">Admin will approve and grant points.</p>
             </div>
         </div>
 
-        <!-- Live Rides List -->
+        <div id="offlineNotice" style="display:none; padding:30px 16px; text-align:center;">
+            <i class="fa-solid fa-power-off" style="font-size:40px; color:#555; margin-bottom:10px;"></i>
+            <h3>You are currently Offline</h3>
+            <p style="color:#888; font-size:14px; margin-top:5px;">Switch to Online to receive live passenger requests.</p>
+        </div>
+
         <div id="ridesSection" style="display:none;">
             <div class="feed-container" id="driverRidesList">
-                <p style="text-align:center; color:#666; margin-top:30px;">Scanning for passenger requests...</p>
+                <p style="text-align:center; color:#666; margin-top:30px;">Scanning for requests...</p>
             </div>
         </div>
 
-        <!-- Bottom Navigation -->
         <div class="bottom-nav">
             <div class="tab-item">
                 <i class="fa-solid fa-car"></i>
-                Live Requests
+                Feed
             </div>
         </div>
     </div>
 
-    <!-- Firebase Script -->
     <script type="module">
         import { 
             auth, provider, signInWithPopup, signOut, onAuthStateChanged,
             db, collection, doc, setDoc, onSnapshot, runTransaction 
         } from "../firebase-config.js";
+        import { playNotificationSound } from "../sound.js";
 
         let currentUid = null;
         let driverData = null;
         let deductionFee = 10;
+        let isOnline = true;
+        let lastRidesCount = 0;
 
         document.getElementById('driverLoginBtn').addEventListener('click', () => {
             signInWithPopup(auth, provider).catch(err => alert(err.message));
         });
 
         document.getElementById('driverLogoutBtn').addEventListener('click', () => {
-            if(confirm("Logout from Driver Partner?")) signOut(auth);
+            if(confirm("Logout?")) signOut(auth);
+        });
+
+        // Duty Online / Offline Toggle
+        const dutyToggleBtn = document.getElementById('dutyToggleBtn');
+        dutyToggleBtn.addEventListener('click', () => {
+            isOnline = !isOnline;
+            if (isOnline) {
+                dutyToggleBtn.innerText = "ONLINE";
+                dutyToggleBtn.className = "duty-switch-btn duty-online";
+                document.getElementById('ridesSection').style.display = "block";
+                document.getElementById('offlineNotice').style.display = "none";
+            } else {
+                dutyToggleBtn.innerText = "OFFLINE";
+                dutyToggleBtn.className = "duty-switch-btn duty-offline";
+                document.getElementById('ridesSection').style.display = "none";
+                document.getElementById('offlineNotice').style.display = "block";
+            }
         });
 
         onAuthStateChanged(auth, (user) => {
@@ -384,13 +371,8 @@
                 if (driverData.status === "approved") {
                     setupBox.style.display = "none";
                     pendingNotice.style.display = "none";
-                    ridesSection.style.display = "block";
+                    if (isOnline) ridesSection.style.display = "block";
                     listenToRidesFeed();
-                } else if (driverData.status === "rejected") {
-                    setupBox.style.display = "none";
-                    pendingNotice.style.display = "block";
-                    pendingNotice.innerHTML = `<div class="ride-card" style="border-color:#ff4757; text-align:center;"><h4 style="color:#ff4757;">Application Rejected</h4><p style="color:#aaa; font-size:13px;">Please contact Admin.</p></div>`;
-                    ridesSection.style.display = "none";
                 } else {
                     setupBox.style.display = "none";
                     pendingNotice.style.display = "block";
@@ -404,7 +386,7 @@
             const vehicle = document.getElementById('regVehicle').value.trim();
 
             if (!phone || !vehicle) {
-                alert("Please fill mobile number and vehicle details!");
+                alert("Fill mobile and vehicle info!");
                 return;
             }
 
@@ -419,7 +401,7 @@
                 submittedAt: new Date()
             });
 
-            alert("Application submitted! Admin approval pending.");
+            alert("Submitted for review!");
         });
 
         function listenToRidesFeed() {
@@ -428,14 +410,20 @@
                 list.innerHTML = "";
                 let count = 0;
 
+                // Sound Alert on New Request
+                if (snapshot.size > lastRidesCount && isOnline) {
+                    playNotificationSound();
+                }
+                lastRidesCount = snapshot.size;
+
                 snapshot.forEach((snap) => {
                     const ride = snap.data();
                     const id = snap.id;
+                    const bids = ride.driverBids || [];
+                    const myBid = bids.find(b => b.driverId === currentUid);
+                    const isConfirmedForMe = ride.status === "confirmed" && ride.confirmedDriver && ride.confirmedDriver.driverId === currentUid;
 
-                    const isConfirmedForMe = ride.status === "confirmed" && ride.driverId === currentUid;
-                    const isMyProposal = ride.status === "driver_offered" && ride.driverId === currentUid;
-
-                    if (ride.status === "pending" || isMyProposal || isConfirmedForMe) {
+                    if (ride.status === "pending" || isConfirmedForMe) {
                         count++;
                         const card = document.createElement('div');
                         card.className = "ride-card";
@@ -443,26 +431,31 @@
                         let actionButtons = '';
 
                         if (ride.status === "pending") {
-                            actionButtons = `
-                                <div class="btn-action-row">
-                                    <button class="btn-indrive-green" onclick="sendProposal('${id}', ${ride.fare})">Accept (₹${ride.fare})</button>
-                                    <button class="btn-dark-counter" onclick="counterOffer('${id}', ${ride.fare})">Offer Higher</button>
-                                </div>
-                            `;
-                        } else if (isMyProposal) {
-                            actionButtons = `
-                                <div style="background:#262215; border:1px solid #73510e; border-radius:10px; padding:12px; margin-top:12px; text-align:center;">
-                                    <span style="color:#f5a623; font-weight:700; font-size:15px;">Your Offer: ₹${ride.driverOfferFare}</span>
-                                    <p style="font-size:12px; color:#aaa; margin-top:4px;">Waiting for passenger to confirm...</p>
-                                </div>
-                            `;
+                            if (myBid) {
+                                actionButtons = `
+                                    <div style="background:#262215; border:1px solid #73510e; border-radius:10px; padding:12px; margin-top:12px; text-align:center;">
+                                        <span style="color:#f5a623; font-weight:700;">Offer Placed: ₹${myBid.offeredFare}</span>
+                                        <p style="font-size:12px; color:#aaa; margin-top:4px;">Waiting for passenger choice...</p>
+                                    </div>
+                                `;
+                            } else {
+                                actionButtons = `
+                                    <div class="btn-action-row">
+                                        <button class="btn-indrive-green" onclick="submitBid('${id}', ${ride.fare})">Accept ₹${ride.fare}</button>
+                                        <button class="btn-dark-counter" onclick="counterBid('${id}', ${ride.fare})">Offer Higher (+₹)</button>
+                                    </div>
+                                `;
+                            }
                         } else if (isConfirmedForMe) {
+                            const waUrl = `https://wa.me/91${ride.customerPhone.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(ride.customerName)},%20I%20am%20your%20I-cab%20driver.`;
                             actionButtons = `
                                 <div style="background:#13281a; border:1px solid #27ae60; border-radius:10px; padding:12px; margin-top:12px;">
                                     <div style="color:#2ed573; font-weight:700; margin-bottom:4px;">Booking Confirmed!</div>
-                                    <p style="font-size:15px; margin-bottom:10px;">
-                                        <strong>Passenger Phone:</strong> <a href="tel:${ride.customerPhone}" style="color:#a3e635; text-decoration:none; font-weight:bold;">📞 ${ride.customerPhone}</a>
-                                    </p>
+                                    <p style="font-size:15px; margin-bottom:10px;">Passenger: 📞 ${ride.customerPhone}</p>
+                                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                                        <a href="tel:${ride.customerPhone}" class="btn-indrive-green" style="background:#0984e3; color:#fff;">Call</a>
+                                        <a href="${waUrl}" target="_blank" class="btn-indrive-green" style="background:#25D366; color:#fff;"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                                    </div>
                                     <button class="btn-indrive-green" style="background:#ff4757; color:#fff;" onclick="completeRide('${id}')">Finish Trip</button>
                                 </div>
                             `;
@@ -470,18 +463,14 @@
 
                         card.innerHTML = `
                             <div class="card-fare-row">
-                                ₹${isMyProposal && ride.driverOfferFare ? ride.driverOfferFare : ride.fare} 
+                                ₹${myBid ? myBid.offeredFare : ride.fare} 
                                 <span class="passenger-count">for ${ride.passengerCount || 1} passenger${(ride.passengerCount || 1) > 1 ? 's' : ''}</span>
                             </div>
 
                             <div class="tags-row">
                                 <span class="tag tag-car"><i class="fa-solid fa-car-side"></i> ${ride.carType || 'Car'}</span>
                                 <span class="tag tag-toll">⚠ Toll NOT included</span>
-                                <span class="tag">Cash</span>
-                            </div>
-
-                            <div class="ride-schedule">
-                                <i class="fa-regular fa-clock" style="margin-right:4px;"></i> ${ride.rideDate || 'Today'}, ${ride.rideTime || ''}
+                                <span class="tag">${bids.length} Offers</span>
                             </div>
 
                             <div class="card-route">
@@ -495,18 +484,11 @@
                                 </div>
                             </div>
 
-                            ${ride.comment ? `
-                                <div class="comment-box">
-                                    <i class="fa-regular fa-comment-dots"></i> <strong>Note:</strong> ${ride.comment}
-                                </div>
-                            ` : ''}
+                            ${ride.comment ? `<div class="comment-box"><i class="fa-regular fa-comment-dots"></i> <strong>Note:</strong> ${ride.comment}</div>` : ''}
 
                             <div class="user-row">
                                 <div class="avatar-circle"><i class="fa-solid fa-user"></i></div>
-                                <div class="user-details">
-                                    <h5>${ride.customerName}</h5>
-                                    <span>Verified Passenger</span>
-                                </div>
+                                <div><h5>${ride.customerName}</h5></div>
                             </div>
 
                             ${actionButtons}
@@ -521,53 +503,41 @@
             });
         }
 
-        window.sendProposal = async (rideId, fare) => {
+        window.submitBid = async (rideId, fare) => {
             if ((driverData.points || 0) < deductionFee) {
-                alert(`Insufficient Balance! Aapke wallet me kam se kam ${deductionFee} points hone chahiye.`);
+                alert(`Insufficient Balance! Min ${deductionFee} points required.`);
                 return;
             }
 
+            const rideRef = doc(db, "rides", rideId);
             await runTransaction(db, async (t) => {
-                const rDoc = await t.get(doc(db, "rides", rideId));
-                if (rDoc.data().status !== "pending") throw "Ride no longer available!";
+                const rDoc = await t.get(rideRef);
+                if (rDoc.data().status !== "pending") throw "Ride no longer active!";
 
-                t.update(doc(db, "rides", rideId), {
-                    status: "driver_offered",
+                const existingBids = rDoc.data().driverBids || [];
+                existingBids.push({
                     driverId: currentUid,
                     driverName: driverData.name,
                     driverPhone: driverData.phone,
                     driverVehicle: driverData.vehicle,
-                    driverOfferFare: fare
+                    offeredFare: Number(fare)
                 });
+
+                t.update(rideRef, { driverBids: existingBids });
             });
 
-            alert("Proposal sent to passenger! Wait for confirmation.");
+            alert("Bid submitted to passenger!");
         };
 
-        window.counterOffer = async (rideId, currentFare) => {
+        window.counterBid = async (rideId, currentFare) => {
             if ((driverData.points || 0) < deductionFee) {
-                alert(`Insufficient Balance! ${deductionFee} points required.`);
+                alert(`Insufficient points!`);
                 return;
             }
 
-            const counter = prompt(`Passenger offer ₹${currentFare} hai. Apna demand fare dalein (₹):`, currentFare + 100);
-
+            const counter = prompt(`Customer offer ₹${currentFare} hai. Apna rate enter karein (₹):`, currentFare + 100);
             if (counter && Number(counter) > 0) {
-                await runTransaction(db, async (t) => {
-                    const rDoc = await t.get(doc(db, "rides", rideId));
-                    if (rDoc.data().status !== "pending") throw "Ride no longer available!";
-
-                    t.update(doc(db, "rides", rideId), {
-                        status: "driver_offered",
-                        driverId: currentUid,
-                        driverName: driverData.name,
-                        driverPhone: driverData.phone,
-                        driverVehicle: driverData.vehicle,
-                        driverOfferFare: Number(counter)
-                    });
-                });
-
-                alert(`Counter offer of ₹${counter} sent!`);
+                await window.submitBid(rideId, Number(counter));
             }
         };
 
