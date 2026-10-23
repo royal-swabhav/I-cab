@@ -40,7 +40,6 @@
             font-weight: 700;
         }
 
-        /* Online / Offline Switch */
         .duty-switch-btn {
             padding: 6px 14px;
             border-radius: 20px;
@@ -111,6 +110,21 @@
         }
         .tag-car { background: #1e3799; color: #ffffff; font-weight: 600; }
         .tag-toll { background: #3d1c1c; color: #ff6b6b; font-weight: 600; }
+
+        /* Highlighted Date-Time Strip */
+        .datetime-strip {
+            background: #252525;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #a3e635;
+            border: 1px solid #333;
+        }
 
         .card-route { margin-bottom: 12px; }
         .route-stop {
@@ -314,7 +328,6 @@
             if(confirm("Logout?")) signOut(auth);
         });
 
-        // Duty Online / Offline Toggle
         const dutyToggleBtn = document.getElementById('dutyToggleBtn');
         dutyToggleBtn.addEventListener('click', () => {
             isOnline = !isOnline;
@@ -410,7 +423,6 @@
                 list.innerHTML = "";
                 let count = 0;
 
-                // Sound Alert on New Request
                 if (snapshot.size > lastRidesCount && isOnline) {
                     playNotificationSound();
                 }
@@ -463,7 +475,7 @@
 
                         card.innerHTML = `
                             <div class="card-fare-row">
-                                ₹${myBid ? myBid.offeredFare : ride.fare} 
+                                ₹${myBid ? myBid.offeredFare : (isConfirmedForMe ? ride.confirmedDriver.finalFare : ride.fare)} 
                                 <span class="passenger-count">for ${ride.passengerCount || 1} passenger${(ride.passengerCount || 1) > 1 ? 's' : ''}</span>
                             </div>
 
@@ -471,6 +483,15 @@
                                 <span class="tag tag-car"><i class="fa-solid fa-car-side"></i> ${ride.carType || 'Car'}</span>
                                 <span class="tag tag-toll">⚠ Toll NOT included</span>
                                 <span class="tag">${bids.length} Offers</span>
+                            </div>
+
+                            <!-- CLEARLY HIGHLIGHTED DATE & TIME -->
+                            <div class="datetime-strip">
+                                <i class="fa-regular fa-calendar-days"></i>
+                                <span>${ride.rideDate || 'Today'}</span>
+                                <span style="color: #666;">|</span>
+                                <i class="fa-regular fa-clock"></i>
+                                <span>${ride.rideTime || 'ASAP'}</span>
                             </div>
 
                             <div class="card-route">
